@@ -1,6 +1,11 @@
 package data_import;
 
 public interface Dataset {
-    public void loadDataset();
-    public double getDistance(String point1,String point2);
+
+    void loadDataset();
+    double getDistance(String point1,String point2);
+
+    Constants getTypeForId(String id);
+
+    String[] getIDs();
 }
