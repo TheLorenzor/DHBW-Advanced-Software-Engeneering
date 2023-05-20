@@ -6,13 +6,11 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class DatasetLoader implements Dataset{
-    private Random random;
     private boolean is_open;
 
-    private HashMap<String,Constants> ids;
+    private HashMap<String, NodeTypes> ids;
     private HashMap<String,Double> distance_matrix;
     public DatasetLoader() {
-        random = new Random();
         is_open = false;
     }
     @Override
@@ -39,9 +37,9 @@ public class DatasetLoader implements Dataset{
                     end_tab = dataset_line.indexOf(';',start_tab);
                     information = dataset_line.substring(start_tab,end_tab);
                     switch (information) {
-                        case "c" -> line_info[1] = Constants.CustomerNode;
-                        case "f" -> line_info[1] = Constants.StationNode;
-                        default -> line_info[1] = Constants.Depot;
+                        case "c" -> line_info[1] = NodeTypes.CustomerNode;
+                        case "f" -> line_info[1] = NodeTypes.StationNode;
+                        default -> line_info[1] = NodeTypes.DepotNode;
                     }
                     // get the longitude
                     start_tab = end_tab+1;
@@ -69,7 +67,7 @@ public class DatasetLoader implements Dataset{
         for (int i =0;i<list.size();++i) {
             // add teh attributes and it will be accassible via the ID --> is for later to get the next id
 
-            ids.put((String)list.get(i)[0],(Constants) list.get(i)[1]);
+            ids.put((String)list.get(i)[0],(NodeTypes) list.get(i)[1]);
             for (int j=0;j<list.size();++j) {
                 String id_i = (String) list.get(i)[0];
                 String id_j = (String) list.get(j)[0];
@@ -77,6 +75,8 @@ public class DatasetLoader implements Dataset{
                     distance_matrix.put(id_i+":"+id_j, 0.0);
                     continue;
                 }
+                // get latidue and longitude from the pair and put it into the distance calculater
+                // then add it to the hashmap --> will make it easier to add it at the end
                 double lat_i = (Double) list.get(i)[3];
                 double lon_i  =(Double) list.get(i)[2];
                 double lat_j =  (Double) list.get(j)[3];
@@ -99,17 +99,30 @@ public class DatasetLoader implements Dataset{
     }
     @Override
     public double getDistance(String point1, String point2) {
-        Double distance = distance_matrix.get(point1+":"+point2);
-        return Objects.requireNonNullElse(distance, -1.0);
+        if (is_open) {
+            Double distance = distance_matrix.get(point1+":"+point2);
+            return Objects.requireNonNullElse(distance, -1.0);
+        } else {
+            throw new RuntimeException("You cant get Distance because the Dataset hasn't been loaded");
+        }
+
     }
     ;
     @Override
-    public Constants getTypeForId(String id) {
-        return ids.get(id);
+    public NodeTypes getTypeForId(String id) {
+        if (is_open) {
+            return ids.get(id);
+        } else {
+            throw new RuntimeException("You cant get Distance because the Dataset hasn't been loaded");
+        }
+
     }
 
     @Override
     public String[] getIDs() {
+        if (!is_open) {
+            throw new RuntimeException("You cant get Distance because the Dataset hasn't been loaded");
+        }
         Object[] obj_arr = ids.keySet().toArray();
         String[] ids_string = new String[obj_arr.length];
         for (int i =0;i< obj_arr.length;++i) {
