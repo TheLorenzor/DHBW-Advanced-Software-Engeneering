@@ -4,6 +4,9 @@ import data_import.Constants;
 import data_import.NodeTypes;
 import data_import.DatasetLoader;
 
+import java.util.HashMap;
+import java.util.stream.Stream;
+
 public class Distance {
 
     public int vehicles_tours;
@@ -19,6 +22,8 @@ public class Distance {
         distance = 0;
         time = 0;
         vehicles_tours = routes.length;
+        String[] long_route = Stream.of(routes).flatMap(Stream::of).toArray(String[]::new);
+        test_right(long_route);
         for (String[] route : routes) {
             calculate_time_and_distance(route);
         }
@@ -30,6 +35,7 @@ public class Distance {
         distance = 0;
         time = 0;
         vehicles_tours = 1;
+        test_right(route);
         calculate_time_and_distance(route);
     }
     private void calculate_time_and_distance(String[] route) {
@@ -70,6 +76,7 @@ public class Distance {
                 local_time = local_time + 0.5;
             }
         }
+
         // calculate the way for the last return back to the depot
         new_distance = datasetLoader.getDistance(route[route.length - 1], "D");
         current_tank = current_tank - (new_distance * Constants.consumption);
@@ -97,7 +104,24 @@ public class Distance {
 
         }
     }
+    public void test_right(String[] route) {
+        String [] compare_ids =datasetLoader.getIDs();
+        HashMap<String,Integer> validator = new HashMap<>();
+        for (String id :compare_ids) {
+            validator.put(id,0);
+        }
+        for (String id:route) {
+            Integer count= validator.get(id);
+            if (count==null ||(datasetLoader.getTypeForId(id)==NodeTypes.CustomerNode && count==1)) {
+                distance = Double.POSITIVE_INFINITY;
+                time = Double.POSITIVE_INFINITY;
+                return;
+            }
+            ++count;
+            validator.put(id,count);
+        }
 
+    }
     public double getDistance() {
         return distance;
     }
