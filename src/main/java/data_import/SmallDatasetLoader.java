@@ -16,6 +16,7 @@ public class SmallDatasetLoader implements Dataset{
     private boolean is_open;
 
     private HashMap<String,Constants> ids;
+    private HashMap<String,Double> distance;
     public SmallDatasetLoader() {
         random = new Random();
         is_open = false;
@@ -72,25 +73,47 @@ public class SmallDatasetLoader implements Dataset{
             }
             reader.close();
             is_open =true;
-        } catch (Exception e) {
+        } catch (IOException io) {
             is_open = false;
             return;
         }
-        if (is_open) {
-            ids = new HashMap<>();
-            for (int i =0;i<list.size();++i) {
-                ids.put((String)list.get(i)[0],(Constants) list.get(i)[1]);
+        ids = new HashMap<>();
+        distance = new HashMap<>();
+        // iterate over the array list to add all the ids and types to the class attributes
+        for (int i =0;i<list.size();++i) {
+            // add teh attributes and it will be accassible via the ID --> is for later to get the next id
+
+            ids.put((String)list.get(i)[0],(Constants) list.get(i)[1]);
+            for (int j=0;j<list.size();++j) {
+                String id_i = (String) list.get(i)[0];
+                String id_j = (String) list.get(j)[0];
+                if (i==j) {
+                    distance.put(id_i+":"+id_j, 0.0);
+                    continue;
+                }
+                double lat_i = (Double) list.get(i)[3];
+                double lon_i  =(Double) list.get(i)[2];
+                double lat_j =  (Double) list.get(j)[3];
+                double lon_j =  (Double) list.get(j)[3];
+                Double distance = Math.abs(calculate_distance(lat_i, lat_j, lon_i, lon_j));
+                System.out.print(id_i);
+                System.out.print(":");
+                System.out.print(id_j);
+                System.out.print("->");
+                System.out.println(distance);
+
             }
-            System.out.println(ids.get("D"));
-
         }
-
-
-
-
-
     }
 
+    private double calculate_distance(double lat1,double lat2,double lon1,double lon2) {
+        double radiusOfEarth = 6371;
+        double dLat = Math.toRadians(lat2-lat1);
+        double dLon = Math.toRadians(lon2-lon1);
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return radiusOfEarth * c;
+    }
     @Override
     public double getDistance(String point1, String point2) {
         return 0;

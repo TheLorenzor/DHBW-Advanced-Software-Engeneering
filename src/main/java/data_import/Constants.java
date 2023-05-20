@@ -4,9 +4,10 @@ public enum Constants {
     StationNode,
     CustomerNode,
     Depot;
-    final double max_tank= 60;
-    final double consumption = 0.2;
-    final double tour_length = 11;
-    final double velocity = 40;
-    final int vehicles = 20;
+    public final double max_tank= 60;
+    public final double consumption = 0.2;
+    public final double tour_length = 11;
+    public final double velocity = 40;
+    public final int vehicles_tall = 20;
+    public final int vehicles_small = 3;
 }

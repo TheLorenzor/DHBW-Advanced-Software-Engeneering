@@ -40,7 +40,8 @@ double dLat = Math.toRadians(lat2-lat1);
 double dLon = Math.toRadians(lon2-lon1); 
 double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2); 
 double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-double distance = radiusOfEarth * c; return distance;
+double distance = radiusOfEarth * c;
+return distance;
 ```
 
 Note above that the earth radius is slightly bigger than it is (~3959 miles).  When the authors dealt with the code, they missed this trivial typo and didn't realize it until the paper was published. So, it doesn't affect anything other than distances slightly. If you want to replicate, you need to use the same number, if not, you can use the actual radius.
