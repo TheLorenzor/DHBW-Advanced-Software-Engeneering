@@ -1,6 +1,6 @@
 package test_data_import;
 
-import data_import.Constants;
+import data_import.NodeTypes;
 import data_import.DatasetLoader;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +16,7 @@ public class TestSmallDatasetLoader {
     @Test
     void test_load_dataset() {
         tester.loadDataset();
-        Assertions.assertEquals(Constants.Depot,tester.getTypeForId("D"));
+        Assertions.assertEquals(NodeTypes.DepotNode,tester.getTypeForId("D"));
 
     }
 
