@@ -6,13 +6,11 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class DatasetLoader implements Dataset{
-    private Random random;
     private boolean is_open;
 
     private HashMap<String,Constants> ids;
     private HashMap<String,Double> distance_matrix;
     public DatasetLoader() {
-        random = new Random();
         is_open = false;
     }
     @Override
@@ -99,17 +97,30 @@ public class DatasetLoader implements Dataset{
     }
     @Override
     public double getDistance(String point1, String point2) {
-        Double distance = distance_matrix.get(point1+":"+point2);
-        return Objects.requireNonNullElse(distance, -1.0);
+        if (is_open) {
+            Double distance = distance_matrix.get(point1+":"+point2);
+            return Objects.requireNonNullElse(distance, -1.0);
+        } else {
+            throw new RuntimeException("You cant get Distance because the Dataset hasn't been loaded");
+        }
+
     }
     ;
     @Override
     public Constants getTypeForId(String id) {
-        return ids.get(id);
+        if (is_open) {
+            return ids.get(id);
+        } else {
+            throw new RuntimeException("You cant get Distance because the Dataset hasn't been loaded");
+        }
+
     }
 
     @Override
     public String[] getIDs() {
+        if (!is_open) {
+            throw new RuntimeException("You cant get Distance because the Dataset hasn't been loaded");
+        }
         Object[] obj_arr = ids.keySet().toArray();
         String[] ids_string = new String[obj_arr.length];
         for (int i =0;i< obj_arr.length;++i) {
