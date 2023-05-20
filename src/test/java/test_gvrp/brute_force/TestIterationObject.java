@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.awt.desktop.SystemSleepEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class TestIterationObject {
     private DatasetLoader loader;
@@ -61,5 +61,36 @@ public class TestIterationObject {
         String[] route = {"C200"};
         Distance iterate = new Distance(route,loader);
         Assertions.assertTrue(Double.isInfinite(iterate.getDistance()));
+    }
+
+    @Test
+    public void test_wrong_routes_double_kunde_different_vehicles() {
+        String[] route1 = {"C1","F2","C2"};
+
+        String[] route2 = {"D","F1","C1","D"};
+        ArrayList<String[]> route = new ArrayList<>();
+        route.add(route1);
+        route.add(route2);
+
+        Distance iterate = new Distance(route,loader);
+        Assertions.assertTrue(Double.isInfinite(iterate.getDistance()));
+    }
+
+    @Test
+    public void test_concurrency() {
+        String[] route1 = {"C1"};
+        String[] route2 = {"C10"};
+        ArrayList<String[]> route = new ArrayList<>();
+        route.add(route1);
+        route.add(route2);
+        Distance iterate = new Distance(route,loader);
+
+        String[] route_Serial = {"C1","D","C10"};
+        Distance iterate_serial = new Distance(route_Serial,loader);
+
+        Assertions.assertEquals(iterate_serial.getDistance(),iterate.getDistance());
+
+
+
     }
 }
