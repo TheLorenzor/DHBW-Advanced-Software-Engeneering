@@ -16,7 +16,7 @@ public class SmallDatasetLoader implements Dataset{
     private boolean is_open;
 
     private HashMap<String,Constants> ids;
-    private HashMap<String,Double> distance;
+    private HashMap<String,Double> distance_matrix;
     public SmallDatasetLoader() {
         random = new Random();
         is_open = false;
@@ -26,15 +26,7 @@ public class SmallDatasetLoader implements Dataset{
         // open the project root = github root and get files
         String root_directory = System.getProperty("user.dir");
         Path path_to_dataset = Paths.get(root_directory,"dataset");
-        File directory = new File(path_to_dataset.toUri());
-        // filter all the one that have not large in front
-        List<String> names = Stream.of(directory.listFiles()).filter(file -> {
-            String name_of_file =file.getName();
-            String is_large = name_of_file.substring(0,5);
-            return !is_large.equals(new String("Large"));
-        }).map(File::getName).collect(Collectors.toList());
-        // get a random small path
-        path_to_dataset = path_to_dataset.resolve(names.get(random.nextInt(0,names.size())));
+        path_to_dataset = path_to_dataset.resolve("dataset.csv");
         File dataset = new File(path_to_dataset.toUri());
         ArrayList<Object[]> list = new ArrayList<>(25);
         try {
@@ -43,14 +35,14 @@ public class SmallDatasetLoader implements Dataset{
             dataset_line =reader.readLine();
             while(dataset_line!=null) {
                 Object[] line_info = new Object[4];
-                int end_tab = dataset_line.indexOf('\t');
+                int end_tab = dataset_line.indexOf(';');
                 if (end_tab>-1) {
                     // first one is ID
                     String information =dataset_line.substring(0,end_tab);
                     line_info[0] = information;
                     int start_tab = end_tab+1;
                     // add another one to skip the first tab
-                    end_tab = dataset_line.indexOf('\t',start_tab);
+                    end_tab = dataset_line.indexOf(';',start_tab);
                     information = dataset_line.substring(start_tab,end_tab);
                     switch (information) {
                         case "c" -> line_info[1] = Constants.CustomerNode;
@@ -59,7 +51,7 @@ public class SmallDatasetLoader implements Dataset{
                     }
                     // get the longitude
                     start_tab = end_tab+1;
-                    end_tab = dataset_line.indexOf('\t',start_tab);
+                    end_tab = dataset_line.indexOf(";",start_tab);
                     information = dataset_line.substring(start_tab,end_tab);
                     line_info[2] = Double.parseDouble(information);
                     // get the latitude
@@ -78,7 +70,7 @@ public class SmallDatasetLoader implements Dataset{
             return;
         }
         ids = new HashMap<>();
-        distance = new HashMap<>();
+        distance_matrix = new HashMap<>();
         // iterate over the array list to add all the ids and types to the class attributes
         for (int i =0;i<list.size();++i) {
             // add teh attributes and it will be accassible via the ID --> is for later to get the next id
@@ -88,26 +80,23 @@ public class SmallDatasetLoader implements Dataset{
                 String id_i = (String) list.get(i)[0];
                 String id_j = (String) list.get(j)[0];
                 if (i==j) {
-                    distance.put(id_i+":"+id_j, 0.0);
+                    distance_matrix.put(id_i+":"+id_j, 0.0);
                     continue;
                 }
                 double lat_i = (Double) list.get(i)[3];
                 double lon_i  =(Double) list.get(i)[2];
                 double lat_j =  (Double) list.get(j)[3];
-                double lon_j =  (Double) list.get(j)[3];
+                double lon_j =  (Double) list.get(j)[2];
+
                 Double distance = Math.abs(calculate_distance(lat_i, lat_j, lon_i, lon_j));
-                System.out.print(id_i);
-                System.out.print(":");
-                System.out.print(id_j);
-                System.out.print("->");
-                System.out.println(distance);
+                distance_matrix.put(id_i+":"+id_j,distance);
 
             }
         }
     }
 
     private double calculate_distance(double lat1,double lat2,double lon1,double lon2) {
-        double radiusOfEarth = 6371;
+        double radiusOfEarth = 3959 ; // miles, 6371km;
         double dLat = Math.toRadians(lat2-lat1);
         double dLon = Math.toRadians(lon2-lon1);
         double a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
