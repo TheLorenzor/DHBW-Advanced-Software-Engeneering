@@ -1,23 +1,17 @@
 package data_import;
 
-import java.awt.image.AreaAveragingScaleFilter;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.*;
 
-public class SmallDatasetLoader implements Dataset{
+public class DatasetLoader implements Dataset{
     private Random random;
     private boolean is_open;
 
     private HashMap<String,Constants> ids;
     private HashMap<String,Double> distance_matrix;
-    public SmallDatasetLoader() {
+    public DatasetLoader() {
         random = new Random();
         is_open = false;
     }
@@ -105,6 +99,23 @@ public class SmallDatasetLoader implements Dataset{
     }
     @Override
     public double getDistance(String point1, String point2) {
-        return 0;
+        Double distance = distance_matrix.get(point1+":"+point2);
+        return Objects.requireNonNullElse(distance, -1.0);
     }
+    ;
+    @Override
+    public Constants getTypeForId(String id) {
+        return ids.get(id);
+    }
+
+    @Override
+    public String[] getIDs() {
+        Object[] obj_arr = ids.keySet().toArray();
+        String[] ids_string = new String[obj_arr.length];
+        for (int i =0;i< obj_arr.length;++i) {
+            ids_string[i] = (String) obj_arr[i];
+        }
+        return ids_string;
+    }
+
 }
