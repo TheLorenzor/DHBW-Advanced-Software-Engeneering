@@ -1,9 +1,19 @@
 package gvrp.brute_force;
 
-public class Bruteforce {
+import data_import.DatasetLoader;
 
-    public double distance() {
-        return 0.0;
+import java.net.DatagramSocket;
+
+public class Bruteforce {
+    DatasetLoader loader;
+    Bruteforce() {
+        this.loader = new DatasetLoader();
+
+    }
+
+    public void do_bruteforce() {
+        String [] available_nodes = this.loader.getIDs();
+
     }
 
 }
