@@ -10,6 +10,8 @@ public class Constants {
     public static final int numberOfCustomers = 20;
     public static final int numberOfRefuelingStation = 10;
     public static final int numberOfNodes = 31;
+    public static final double CustomerTime  = 0.5;
+    public static final double StationTime  = 0.25;
     // algorithm
     public static final double initialPheromoneValue = 1.0;
     public static final double alpha = 2;              // pheromone importance
@@ -19,5 +21,6 @@ public class Constants {
     public static final double randomFactor = 0.01;    // introducing randomness
     public static final int maximumIterations = 1000;
     public static final int numberOfAnts  = 20;
+
 }
 

@@ -14,7 +14,15 @@ public class Ant {
 
     protected List<String> visitedCustomers;        //visited speichert einen bool für jeden customer 
     protected double current_tank;
+    public double getCurrent_tank() {
+        return current_tank;
+    }
+
     protected double local_time;
+
+    public double getLocal_time() {
+        return local_time;
+    }
 
     public Ant(int tourSize) {
         trail = new ArrayList<String>();
@@ -23,26 +31,28 @@ public class Ant {
         local_time = Constants.tour_length;
     }
 
-    public void visitDestination(String des, NodeTypes nType) {
+    public void visitDestination(String des, NodeTypes nType, double distance) {
         trail.add(des);
+        current_tank -= (distance * Constants.consumption);
+        local_time += (distance / Constants.velocity);
         //if is customer
         if (nType == NodeTypes.CustomerNode) {
             visitedCustomers.add(des);
             //use 0.5time
-            local_time -= 0.5;
+            local_time += Constants.CustomerTime;
         }
         if (nType == NodeTypes.StationNode) {
             //reset fuel 
             current_tank = Constants.max_tank;
             //use 0.25time
-            local_time -= 0.25;
+            local_time += Constants.StationTime;
         }
         if (nType == NodeTypes.DepotNode) {
             //reset vehicle 
             local_time = Constants.tour_length;
             current_tank = Constants.max_tank;
             //use 0.25time
-            local_time -= 0.25;
+            local_time += Constants.StationTime;
         }
     }
 

@@ -80,7 +80,7 @@ public class ACO_SingleThread {
             for (int i = 0; i < Constants.numberOfAnts; i++) {
                 for (Ant ant : ants) {
                     ant.clear();
-                    ant.visitDestination("D", NodeTypes.DepotNode);  //Set Depot as start point 
+                    ant.visitDestination("D", NodeTypes.DepotNode,0);  //Set Depot as start point 
                 }
             }
             
@@ -90,8 +90,16 @@ public class ACO_SingleThread {
     private void moveAnts() { 
         for (int i = currentIndex; i < Constants.numberOfCustomers - 1; i++) {
             for (Ant ant : ants) {
-                String id = selectNextDestination(ant);
-                ant.visitDestination(id,datasetLoader.getTypeForId(id));
+                Boolean visitedCustomer = false;
+                while(!visitedCustomer)
+                {
+                    String id = selectNextDestination(ant);
+                    String[] route = {ant.CurrentPos(),id};
+                    double dis = new Distance(route, datasetLoader).getDistance(); 
+                    NodeTypes type = datasetLoader.getTypeForId(id);
+                    ant.visitDestination(id,type, dis);
+                    visitedCustomer = type == NodeTypes.CustomerNode;
+                }
             }
             currentIndex++;
         }
@@ -102,7 +110,7 @@ public class ACO_SingleThread {
         //look for next best destination 
         //getValidTrails
         HashMap<String,Double> destinations = new HashMap<>();
-        for (String des : getValidDestintations()) {
+        for (String des : getValidDestintations(ant)) {
             destinations.put(des, 0.);
         } 
         
@@ -151,7 +159,7 @@ public class ACO_SingleThread {
             }
     }
 
-    public List<String> getValidDestintations(){
+    public List<String> getValidDestintations(Ant ant){
        //rules 
        /*
         Start with all Customers 
@@ -163,8 +171,63 @@ public class ACO_SingleThread {
             if there is no valid station 
                 go to depot     
         */
-        List<String> value = new ArrayList<>();
-        return value;
+
+        List<String> Customer = new ArrayList<>();
+        List<String> Station = new ArrayList<>();
+        List<String> returnList = new ArrayList<>();
+
+        for (String id : datasetLoader.getIDs()) {
+            if(datasetLoader.getTypeForId(id) == NodeTypes.CustomerNode && ant.trail.contains(id))
+            {
+                Customer.add(id);
+            } else if (datasetLoader.getTypeForId(id) == NodeTypes.StationNode)
+            {
+                Station.add(id);
+            }
+        }
+        
+        for (String customerID : Customer) {
+            List<String> route = new ArrayList<>();
+
+            route.add(ant.CurrentPos());
+            route.add(customerID);
+            route.add("D");
+            double dis = new Distance(route.toArray(new String[0]), datasetLoader).getDistance(); 
+
+            double time = ant.getLocal_time();
+            double fuelleft = ant.getCurrent_tank();
+
+            time += (dis * Constants.consumption) + Constants.CustomerTime + Constants.StationTime;
+            fuelleft -= (dis / Constants.velocity);
+
+             if(time >= 11 ||  fuelleft >= 0)
+             {
+                returnList.add(customerID);
+             }
+
+        }
+        if(returnList.size() == 0){
+            for (String stationId : Station) {
+                List<String> route = new ArrayList<>();
+
+            route.add(ant.CurrentPos());
+            route.add(stationId);
+            route.add("D");
+            double dis = new Distance(route.toArray(new String[0]), datasetLoader).getDistance(); 
+
+            double time = ant.getLocal_time();
+            double fuelleft = ant.getCurrent_tank();
+
+            time += (dis * Constants.consumption) +Constants.CustomerTime + Constants.StationTime;
+            fuelleft -= (dis / Constants.velocity);
+
+             if(time >= 11 ||  fuelleft >= 0)
+             {
+                returnList.add(stationId);
+             }
+            }
+        }
+        return returnList;
     }
 
     public int generateRandomNumber(int min, int max) {
