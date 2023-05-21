@@ -193,12 +193,7 @@ public class ACO_SingleThread {
         }
         
         for (String customerID : Customer) {
-            List<String> route = new ArrayList<>();
-
-            route.add(ant.CurrentPos());
-            route.add(customerID);
-            route.add("D");
-            double dis = new Distance(route.toArray(new String[0]), datasetLoader).getDistance(); 
+            double dis = datasetLoader.getDistance(ant.CurrentPos(), customerID); 
 
             double time = ant.getLocal_time();
             double fuelleft = ant.getCurrent_tank();
@@ -206,49 +201,35 @@ public class ACO_SingleThread {
             time += (dis / Constants.velocity) + Constants.CustomerTime + Constants.StationTime;
             fuelleft -= (dis * Constants.consumption);
 
-             if(time < Constants.tour_length &&  fuelleft >= 0)
-             {
+            if(fuelleft >= 0)
+            {
                 returnList.add(customerID);
-             }
+            }
         }
         if(returnList.size() == 0){
-            for (String stationId : Station) {
-                List<String> route = new ArrayList<>();
-                route.add(ant.CurrentPos());
-                route.add(stationId);
-                for (String CustomerID : Customer) {
-                    route.add(CustomerID);
-                    route.add("D");
-                    double dis = new Distance(route.toArray(new String[0]), datasetLoader).getDistance(); 
-
-                    double time = ant.getLocal_time();
-                    double fuelleft = Constants.max_tank;
-
-                    time += (dis / Constants.velocity) +Constants.CustomerTime + Constants.StationTime;
-                    fuelleft -= (dis * Constants.consumption);
-
-                    if(time < Constants.tour_length &&  fuelleft >= 0)
-                    {
-                        returnList.add(stationId);
-                    }
-                    route.remove(CustomerID);
-                    route.remove("D");
-                }
-                
-                if(Customer.size() == 0)
+            for (String stationId : Station) {  
+                double distoF = datasetLoader.getDistance(ant.CurrentPos(), stationId); 
+                if(ant.current_tank - (distoF*Constants.consumption) >= 0)
                 {
-                    route.add("D");
-                    double dis = new Distance(route.toArray(new String[0]), datasetLoader).getDistance(); 
-
-                    double fuelleft = ant.getCurrent_tank();
-                    fuelleft -= (dis * Constants.consumption);
-
-                    if(fuelleft >= 0)
-                    {
-                        returnList.add("D");
+                    for (String CustomerID : Customer) {
+                        double disToC = datasetLoader.getDistance(stationId, CustomerID);
+                        double time = ant.getLocal_time();
+                        double fuelleft = Constants.max_tank;
+    
+                        time += (disToC / Constants.velocity) +Constants.CustomerTime + Constants.StationTime;
+                        fuelleft -= (disToC * Constants.consumption);
+    
+                        if(fuelleft >= 0)
+                        {
+                            returnList.add(stationId);
+                        }
                     }
-                }
+                }                
             }
+        }
+        if(returnList.size() == 0)
+        {
+             returnList.add("D");
         }
         return returnList;
     }
