@@ -46,9 +46,22 @@ public class DistanceWorker implements Runnable {
             // if it is not a customer the tank gets refilled and the waiting time is updated --> this is easier because
             // it doesn't need to check for 2 variables
             if (!(datasetLoader.getTypeForId(route[i]) == NodeTypes.CustomerNode)) {
-                if (datasetLoader.getTypeForId(route[i])==NodeTypes.DepotNode && distance_global.getTime()<local_time) {
+                // if depotnode it is automatically considered a new route
+                if (datasetLoader.getTypeForId(route[i])==NodeTypes.DepotNode  ) {
+                    // sto check whether the time till now is longer than the allowed it checks and if so it synchroniz es automatically
+                    if (local_time>Constants.tour_length) {
+                        synchronized (distance_global.mutex) {
+                            distance_global.setTime(Double.POSITIVE_INFINITY);
+                            distance_global.setDistance(Double.POSITIVE_INFINITY);
+                        }
+                        return;
+                    }
+                    // if it is allowed in range it neeeds to get the time and update it for the case it is larger --> needs to be synchronzied
+                     // before to prevent that while asking that it sets it to infinity
                     synchronized (distance_global.mutex) {
-                        distance_global.setTime(local_time);
+                        if (local_time >distance_global.getTime()) {
+                            distance_global.setTime(local_time);
+                        }
                     }
                     local_time = 0;
                 }
@@ -69,14 +82,14 @@ public class DistanceWorker implements Runnable {
         // synchronization to make it thread safe
         synchronized (distance_global.mutex) {
             // if it is lower than zero or greater than the 10 3/4 hours it is considered a failure which puts it at infinity
-            if (current_tank < 0 || local_time > 10.75) {
+            if (current_tank < 0 || local_time > Constants.tour_length) {
                 distance_global.setDistance(Double.POSITIVE_INFINITY);
                 distance_global.setTime(Double.POSITIVE_INFINITY);
             } else {
                 // if it is checked it should check whether it is infinite --> to prevent overflows it adds
                 // only to the distance if it is not infinite --> if it is infinite it is considered already a failure
                 // because one vehicle failed and so the route is incomplete
-                if (!Double.isInfinite(distance_global.getDistance())) {
+                if (Double.isFinite(distance_global.getDistance())) {
                     distance_global.setDistance(distance_global.getDistance()+ distance_local);
                 }
                 // only the highest time is considered aligable for the total time because all vehicles start at the same
