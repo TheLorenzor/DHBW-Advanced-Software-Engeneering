@@ -46,10 +46,17 @@ public class DistanceWorker implements Runnable {
             // if it is not a customer the tank gets refilled and the waiting time is updated --> this is easier because
             // it doesn't need to check for 2 variables
             if (!(datasetLoader.getTypeForId(route[i]) == NodeTypes.CustomerNode)) {
+                if (datasetLoader.getTypeForId(route[i])==NodeTypes.DepotNode && distance_global.getTime()<local_time) {
+                    synchronized (distance_global.mutex) {
+                        distance_global.setTime(local_time);
+                    }
+                    local_time = 0;
+                }
                 local_time = local_time + 0.25;
                 current_tank = Constants.max_tank;
             } else {
                 // if it is a customer node it adds 0.5
+
                 local_time = local_time + 0.5;
             }
         }

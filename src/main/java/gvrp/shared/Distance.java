@@ -35,6 +35,9 @@ public class Distance {
         vehicles_tours = routes.size();
         String[] array_route = route2d.stream().flatMap(Stream::of).toArray(String[]::new);
         test_right(array_route);
+        if (distance != 0) {
+            return;
+        }
         ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(3);
 
         for (String[] route : routes) {
@@ -56,6 +59,9 @@ public class Distance {
         time = 0;
         vehicles_tours = 1;
         test_right(route);
+        if (distance !=0) {
+            return;
+        }
         DistanceWorker worker = new DistanceWorker(datasetLoader,route,this);
         worker.run();
     }
