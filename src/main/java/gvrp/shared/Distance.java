@@ -47,8 +47,6 @@ public class Distance {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
     }
 
     public Distance(String[] route, DatasetLoader dataset) {

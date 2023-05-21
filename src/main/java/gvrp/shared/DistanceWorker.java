@@ -8,6 +8,7 @@ public class DistanceWorker implements Runnable {
     private final DatasetLoader datasetLoader;
     private final String[] route;
     private final Distance distance_global;
+
     DistanceWorker(DatasetLoader loader, String[] routes,Distance distance) {
         datasetLoader = loader;
         route = routes;
@@ -39,7 +40,6 @@ public class DistanceWorker implements Runnable {
                 synchronized (distance_global.mutex) {
                     distance_global.setDistance(Double.POSITIVE_INFINITY);
                     distance_global.setTime(Double.POSITIVE_INFINITY);
-
                 }
                 return;
             }
@@ -78,7 +78,6 @@ public class DistanceWorker implements Runnable {
                     distance_global.setTime(local_time);
                 }
             }
-
         }
     }
 }
