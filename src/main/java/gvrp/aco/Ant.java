@@ -49,7 +49,7 @@ public class Ant {
         }
         if (nType == NodeTypes.DepotNode) {
             //reset vehicle 
-            local_time = Constants.tour_length;
+            local_time = 0;
             current_tank = Constants.max_tank;
             //use 0.25time
             local_time += Constants.StationTime;

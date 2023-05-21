@@ -1,6 +1,7 @@
 package gvrp.aco;
 
 import java.lang.module.Configuration;
+import java.rmi.server.RemoteRef;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,7 +18,7 @@ public class ACO_SingleThread {
     private DatasetLoader datasetLoader;
     private Random random = new Random();
     
-    private final HashMap<String,Double> pheromoneMatrix;        //saves the pheromones for each path
+    private HashMap<String,Double> pheromoneMatrix;        //saves the pheromones for each path
     private final List<Ant> ants = new ArrayList<>();
     private int currentIndex;
 
@@ -28,12 +29,11 @@ public class ACO_SingleThread {
 
 //region Instance
 //---------------------------------------------------------------------------------------
-    public ACO_SingleThread()
+    public ACO_SingleThread(DatasetLoader dataSet)
     {
-        datasetLoader = new DatasetLoader();
-        datasetLoader.loadDataset();
+        datasetLoader = dataSet;
         pheromoneMatrix = CreatePheromoneMatrix();
-        for (int i = 0; i < Constants.numberOfCustomers; i++) {
+        for (int i = 0; i < Constants.numberOfAnts; i++) {
             ants.add(new Ant(Constants.numberOfCustomers));
         }
     }
@@ -88,12 +88,14 @@ public class ACO_SingleThread {
     }
 
     private void moveAnts() { 
-        for (int i = currentIndex; i < Constants.numberOfCustomers - 1; i++) {
+        for (int i = currentIndex; i < Constants.numberOfCustomers; i++) {
             for (Ant ant : ants) {
                 Boolean visitedCustomer = false;
                 while(!visitedCustomer)
                 {
-                    String id = selectNextDestination(ant);
+                    String id = selectNextDestination(ant);                   
+                    if(ant.CurrentPos() == id)
+                        break;
                     String[] route = {ant.CurrentPos(),id};
                     double dis = new Distance(route, datasetLoader).getDistance(); 
                     NodeTypes type = datasetLoader.getTypeForId(id);
@@ -119,7 +121,7 @@ public class ACO_SingleThread {
         if(random.nextDouble() < Constants.randomFactor)
         {
             for (String id : destinations.keySet()) {
-                if(id == "C"+t && ant.visitedCustomers(id)){
+                if(id == "C"+Integer.toString(t) && ant.visitedCustomers(id)){
                     return id;
                 }
             }
@@ -136,7 +138,7 @@ public class ACO_SingleThread {
                 return id;
             }
         }
-        return "D";
+        throw new RuntimeException("runtime exception : other cities");
     }
 
     private void calculateProbabilities(Ant ant, HashMap<String, Double> destinations) {
@@ -148,14 +150,18 @@ public class ACO_SingleThread {
             //probabilities[j] = numerator / pheromone; --> calculates the probality based on the relative pheromones 
             double pheromone = 0.0;
             for (String des : destinations.keySet()) {
-                pheromone += Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
-                           * Math.pow(1.0 / datasetLoader.getDistance(ant.CurrentPos(), des), Constants.beta);
+                if(pheromoneMatrix.containsKey(ant.CurrentPos()+des))
+                    pheromone += Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
+                               * Math.pow(1.0 / datasetLoader.getDistance(ant.CurrentPos(), des), Constants.beta);
             }
 
             for (String des : destinations.keySet()) {
-                double numerator = Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
-                                 * Math.pow(1.0 / datasetLoader.getDistance(ant.CurrentPos(), des), Constants.beta);
-                destinations.put(des, numerator/pheromone);
+                if(pheromoneMatrix.containsKey(ant.CurrentPos()+des))
+                {
+                    double numerator = Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
+                                     * Math.pow(1.0 / datasetLoader.getDistance(ant.CurrentPos(), des), Constants.beta);
+                    destinations.put(des, numerator/pheromone);
+                }
             }
     }
 
@@ -177,10 +183,10 @@ public class ACO_SingleThread {
         List<String> returnList = new ArrayList<>();
 
         for (String id : datasetLoader.getIDs()) {
-            if(datasetLoader.getTypeForId(id) == NodeTypes.CustomerNode && ant.trail.contains(id))
+            if(datasetLoader.getTypeForId(id) == NodeTypes.CustomerNode && !ant.trail.contains(id))
             {
                 Customer.add(id);
-            } else if (datasetLoader.getTypeForId(id) == NodeTypes.StationNode)
+            } if (datasetLoader.getTypeForId(id) == NodeTypes.StationNode)
             {
                 Station.add(id);
             }
@@ -197,34 +203,51 @@ public class ACO_SingleThread {
             double time = ant.getLocal_time();
             double fuelleft = ant.getCurrent_tank();
 
-            time += (dis * Constants.consumption) + Constants.CustomerTime + Constants.StationTime;
-            fuelleft -= (dis / Constants.velocity);
+            time += (dis / Constants.velocity) + Constants.CustomerTime + Constants.StationTime;
+            fuelleft -= (dis * Constants.consumption);
 
-             if(time >= 11 ||  fuelleft >= 0)
+             if(time < Constants.tour_length &&  fuelleft >= 0)
              {
                 returnList.add(customerID);
              }
-
         }
         if(returnList.size() == 0){
             for (String stationId : Station) {
                 List<String> route = new ArrayList<>();
+                route.add(ant.CurrentPos());
+                route.add(stationId);
+                for (String CustomerID : Customer) {
+                    route.add(CustomerID);
+                    route.add("D");
+                    double dis = new Distance(route.toArray(new String[0]), datasetLoader).getDistance(); 
 
-            route.add(ant.CurrentPos());
-            route.add(stationId);
-            route.add("D");
-            double dis = new Distance(route.toArray(new String[0]), datasetLoader).getDistance(); 
+                    double time = ant.getLocal_time();
+                    double fuelleft = Constants.max_tank;
 
-            double time = ant.getLocal_time();
-            double fuelleft = ant.getCurrent_tank();
+                    time += (dis / Constants.velocity) +Constants.CustomerTime + Constants.StationTime;
+                    fuelleft -= (dis * Constants.consumption);
 
-            time += (dis * Constants.consumption) +Constants.CustomerTime + Constants.StationTime;
-            fuelleft -= (dis / Constants.velocity);
+                    if(time < Constants.tour_length &&  fuelleft >= 0)
+                    {
+                        returnList.add(stationId);
+                    }
+                    route.remove(CustomerID);
+                    route.remove("D");
+                }
+                
+                if(Customer.size() == 0)
+                {
+                    route.add("D");
+                    double dis = new Distance(route.toArray(new String[0]), datasetLoader).getDistance(); 
 
-             if(time >= 11 ||  fuelleft >= 0)
-             {
-                returnList.add(stationId);
-             }
+                    double fuelleft = ant.getCurrent_tank();
+                    fuelleft -= (dis * Constants.consumption);
+
+                    if(fuelleft >= 0)
+                    {
+                        returnList.add("D");
+                    }
+                }
             }
         }
         return returnList;
@@ -280,7 +303,6 @@ public class ACO_SingleThread {
 
     private void clearTrails() {
         //reset the pheromones to initial values
-        pheromoneMatrix.clear();
         for (String trail : pheromoneMatrix.keySet()) {
             pheromoneMatrix.put(trail, Constants.initialPheromoneValue);
         }
