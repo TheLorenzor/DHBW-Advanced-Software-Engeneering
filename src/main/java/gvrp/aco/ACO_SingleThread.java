@@ -126,7 +126,7 @@ public class ACO_SingleThread {
                 }
             }
         }
-        calculateProbabilities(ant, destinations);
+        destinations = calculateProbabilities(ant, destinations);
 
         double randomNumber = random.nextDouble();
         double total = 0;
@@ -141,7 +141,7 @@ public class ACO_SingleThread {
         throw new RuntimeException("runtime exception : other cities");
     }
 
-    private void calculateProbabilities(Ant ant, HashMap<String, Double> destinations) {
+    private HashMap<String, Double> calculateProbabilities(Ant ant, HashMap<String, Double> destinations) {
             //current position
             //sum pheromones of all not visited Trails 
             //else 
@@ -149,20 +149,30 @@ public class ACO_SingleThread {
             //double numerator = Math.pow(trails[i][j], Configuration.INSTANCE.alpha) * Math.pow(1.0 / graph[i][j], Configuration.INSTANCE.beta);
             //probabilities[j] = numerator / pheromone; --> calculates the probality based on the relative pheromones 
             double pheromone = 0.0;
+            double dis = 0;
             for (String des : destinations.keySet()) {
-                if(pheromoneMatrix.containsKey(ant.CurrentPos()+des))
-                    pheromone += Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
-                               * Math.pow(1.0 / datasetLoader.getDistance(ant.CurrentPos(), des), Constants.beta);
+                 dis = datasetLoader.getDistance(ant.CurrentPos(), des);
+                if(dis !=  Double.POSITIVE_INFINITY)
+                {
+                    if(des != ant.CurrentPos()){
+                        if(pheromoneMatrix.containsKey(ant.CurrentPos()+des))
+                        pheromone += Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
+                                   * Math.pow(1.0 / dis, Constants.beta);  
+                    }
+                }
             }
 
             for (String des : destinations.keySet()) {
                 if(pheromoneMatrix.containsKey(ant.CurrentPos()+des))
-                {
+                {   
                     double numerator = Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
                                      * Math.pow(1.0 / datasetLoader.getDistance(ant.CurrentPos(), des), Constants.beta);
-                    destinations.put(des, numerator/pheromone);
+                    if(des != ant.CurrentPos())
+                        destinations.put(des, numerator/pheromone);
                 }
             }
+
+        return destinations;
     }
 
     public List<String> getValidDestintations(Ant ant){
@@ -185,53 +195,44 @@ public class ACO_SingleThread {
         for (String id : datasetLoader.getIDs()) {
             if(datasetLoader.getTypeForId(id) == NodeTypes.CustomerNode && !ant.trail.contains(id))
             {
-                Customer.add(id);
+                returnList.add(id);
             } if (datasetLoader.getTypeForId(id) == NodeTypes.StationNode)
             {
-                Station.add(id);
+                returnList.add(id);
             }
+            
         }
-        
-        for (String customerID : Customer) {
-            double dis = datasetLoader.getDistance(ant.CurrentPos(), customerID); 
-
-            double time = ant.getLocal_time();
-            double fuelleft = ant.getCurrent_tank();
-
-            time += (dis / Constants.velocity) + Constants.CustomerTime + Constants.StationTime;
-            fuelleft -= (dis * Constants.consumption);
-
-            if(fuelleft >= 0)
-            {
-                returnList.add(customerID);
-            }
-        }
-        if(returnList.size() == 0){
-            for (String stationId : Station) {  
-                double distoF = datasetLoader.getDistance(ant.CurrentPos(), stationId); 
-                if(ant.current_tank - (distoF*Constants.consumption) >= 0)
-                {
-                    for (String CustomerID : Customer) {
-                        double disToC = datasetLoader.getDistance(stationId, CustomerID);
-                        double time = ant.getLocal_time();
-                        double fuelleft = Constants.max_tank;
-    
-                        time += (disToC / Constants.velocity) +Constants.CustomerTime + Constants.StationTime;
-                        fuelleft -= (disToC * Constants.consumption);
-    
-                        if(fuelleft >= 0)
-                        {
-                            returnList.add(stationId);
-                        }
-                    }
-                }                
-            }
-        }
-        if(returnList.size() == 0)
+        if(ant.getTrail().contains("D"))
         {
              returnList.add("D");
         }
         return returnList;
+    }
+
+    private Boolean IsMovable(String CurPos, String nextPos,double tank,double time)
+    {
+        double dis = datasetLoader.getDistance(CurPos, nextPos); 
+
+        time += (dis / Constants.velocity) + Constants.CustomerTime + Constants.StationTime;
+        tank -= (dis * Constants.consumption);
+        return (time <= Constants.tour_length && tank >= 0);
+    }
+    private Boolean CheckNextCustomer(String CurPos,List<String>Customers, double tank,double time)
+    {
+        for (String customerID : Customers) {
+            if(IsMovable(CurPos, customerID, tank, time))
+                return true;
+        }
+        return false;
+    }
+
+    private Boolean CheckNextStation(String CurPos,List<String>Stations ,double tank,double time)
+    {
+        for (String stationID : Stations) {
+            if(IsMovable(CurPos, stationID, tank, time))
+                return true;
+        }
+        return false;
     }
 
     public int generateRandomNumber(int min, int max) {
@@ -256,13 +257,14 @@ public class ACO_SingleThread {
         for (Ant ant : ants) {
             String[] TrailArray = ant.trail.toArray(new String[0]);
             Distance d = new Distance(TrailArray, datasetLoader);
-            double contribution = Constants.q / d.getDistance();
-            for (int i = 0; i < TrailArray.length - 1; i++) {
-                String key = TrailArray[i]+TrailArray[i + 1];
-                Double curValue = pheromoneMatrix.get(key);
-                pheromoneMatrix.put(key, (curValue+contribution));
+            if(d.getDistance() != Double.POSITIVE_INFINITY){
+                double contribution = Constants.q / d.getDistance();
+                for (int i = 0; i < TrailArray.length - 1; i++) {
+                    String key = TrailArray[i]+TrailArray[i + 1];
+                    Double curValue = pheromoneMatrix.get(key);
+                    pheromoneMatrix.put(key, (curValue+contribution));
+                }
             }
-
         }
     }
 
