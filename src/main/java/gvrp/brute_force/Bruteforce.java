@@ -81,8 +81,6 @@ public class Bruteforce {
         }
         // return the final try
         return current_try;
-
-
     }
 
 }
