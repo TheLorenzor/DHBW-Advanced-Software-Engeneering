@@ -59,6 +59,7 @@ public class DistanceWorker implements Runnable {
                     // if it is allowed in range it neeeds to get the time and update it for the case it is larger --> needs to be synchronzied
                      // before to prevent that while asking that it sets it to infinity
                     synchronized (distance_global.mutex) {
+                        ++distance_global.vehicles_tours;
                         if (local_time >distance_global.getTime()) {
                             distance_global.setTime(local_time);
                         }
