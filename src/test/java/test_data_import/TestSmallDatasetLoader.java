@@ -17,7 +17,6 @@ public class TestSmallDatasetLoader {
     void test_load_dataset() {
         tester.loadDataset();
         Assertions.assertEquals(NodeTypes.DepotNode,tester.getTypeForId("D"));
-
     }
 
     @Test
