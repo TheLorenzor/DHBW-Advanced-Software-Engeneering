@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 public class TestBruteForce {
     public static void main (String[] args) {
         Bruteforce nb = new Bruteforce();
-        if(nb.recursive_func(0)==-1) {
+        if(nb.do_bruteforce()==-1) {
             System.out.println("More than a Milliarde");
             System.out.println(BestDistance.getBest_distance());
         }

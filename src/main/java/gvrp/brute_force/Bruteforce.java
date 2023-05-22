@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class Bruteforce {
     DatasetLoader loader;
@@ -30,18 +31,31 @@ public class Bruteforce {
         int cores = Runtime.getRuntime().availableProcessors();
         executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(cores);
     }
+
+    public int do_bruteforce() {
+        int a = recursive_func(0);
+        executor.shutdown();
+        try {
+            // waitr until everything is terminated
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return a;
+    }
+
     /**
      * Resursive Function to test out all combinations with n! --> if it is larger than 1*10^9 it automatically returns
-     *
+     * <p>
      * It Works that the first iteration marks one of and so all other following recurive functions mark the next one of
      * if then all have been marked of once it automatically starta new worker --> then it releases the last one --> with
      * this technique it automatically gets all
-     * */
+     */
     public int recursive_func(int current_try) {
         // if all have been selected --> so it the same length as all ids which makes it possible to test
         if (route.size() == available_nodes.length) {
             // start a brute force worker that calcualtes the distance for the one route
-            BruteForceWorker worker = new BruteForceWorker(this.loader,route);
+            BruteForceWorker worker = new BruteForceWorker(this.loader, route);
             executor.submit(worker);
             // if it is more than one milliarde it is returning -1 elsewise the new updated
             return current_try == 1000000000 ? -1 : current_try + 1;
