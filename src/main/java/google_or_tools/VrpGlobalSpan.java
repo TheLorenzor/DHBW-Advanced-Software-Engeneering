@@ -8,12 +8,15 @@ import com.google.ortools.constraintsolver.RoutingIndexManager;
 import com.google.ortools.constraintsolver.RoutingModel;
 import com.google.ortools.constraintsolver.RoutingSearchParameters;
 import com.google.ortools.constraintsolver.main;
+
+import data_import.DatasetLoader;
+
 import java.util.logging.Logger;
 
 /** Minimal VRP.*/
 public class VrpGlobalSpan {
   private static final Logger logger = Logger.getLogger(VrpGlobalSpan.class.getName());
-
+  
   static class DataModel {
     public final long[][] distanceMatrix = {
         {0, 548, 776, 696, 582, 274, 502, 194, 308, 194, 536, 502, 388, 354, 468, 776, 662},
@@ -34,6 +37,7 @@ public class VrpGlobalSpan {
         {776, 868, 1552, 560, 674, 1050, 1278, 742, 1084, 810, 1152, 274, 388, 422, 764, 0, 798},
         {662, 1210, 754, 1358, 1244, 708, 480, 856, 514, 468, 354, 844, 730, 536, 194, 798, 0},
     };
+  
     public final int vehicleNumber = 4;
     public final int depot = 0;
   }

@@ -188,8 +188,7 @@ public class ACO_SingleThread {
             } if (datasetLoader.getTypeForId(id) == NodeTypes.StationNode)
             {
                 returnList.add(id);
-            }
-            
+            }           
         }
         if(ant.getTrail().contains("D"))
         {
