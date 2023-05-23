@@ -19,7 +19,7 @@ public class Constants {
     public static final double evaporation = 0.1;
     public static final double q = 500;                // pheromone left on trail per ant
     public static final double randomFactor = 0.01;    // introducing randomness
-    public static final int maximumIterations = 1000;
+    public static final int maximumIterations = 500000;
     public static final int numberOfAnts  =20;
 
 }

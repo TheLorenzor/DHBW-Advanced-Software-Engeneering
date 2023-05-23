@@ -146,7 +146,6 @@ public class ACO_SingleThread {
             //sum pheromones of all not visited Trails 
             //else 
             //numerator is the pheromone of a single  trail 
-            //double numerator = Math.pow(trails[i][j], Configuration.INSTANCE.alpha) * Math.pow(1.0 / graph[i][j], Configuration.INSTANCE.beta);
             //probabilities[j] = numerator / pheromone; --> calculates the probality based on the relative pheromones 
             double pheromone = 0.0;
             double dis = 0;
@@ -163,12 +162,16 @@ public class ACO_SingleThread {
             }
 
             for (String des : destinations.keySet()) {
-                if(pheromoneMatrix.containsKey(ant.CurrentPos()+des))
-                {   
-                    double numerator = Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
-                                     * Math.pow(1.0 / datasetLoader.getDistance(ant.CurrentPos(), des), Constants.beta);
-                    if(des != ant.CurrentPos())
-                        destinations.put(des, numerator/pheromone);
+                dis = datasetLoader.getDistance(ant.CurrentPos(), des);
+                if(dis !=  Double.POSITIVE_INFINITY)
+                {
+                    if(pheromoneMatrix.containsKey(ant.CurrentPos()+des))
+                    {   
+                        double numerator = Math.pow(pheromoneMatrix.get(ant.CurrentPos()+des),Constants.alpha) 
+                                        * Math.pow(1.0 / dis, Constants.beta);
+                        if(des != ant.CurrentPos())
+                            destinations.put(des, numerator/pheromone);
+                    }
                 }
             }
 
@@ -176,20 +179,6 @@ public class ACO_SingleThread {
     }
 
     public List<String> getValidDestintations(Ant ant){
-       //rules 
-       /*
-        Start with all Customers 
-            not visited and
-            there needs to be enough Time and Fuel to reach Customer and Depot
-            
-            if there is no valid customer
-                check if there ist enough time to reach fuel Station and Customer and depot
-            if there is no valid station 
-                go to depot     
-        */
-
-        List<String> Customer = new ArrayList<>();
-        List<String> Station = new ArrayList<>();
         List<String> returnList = new ArrayList<>();
 
         for (String id : datasetLoader.getIDs()) {
@@ -208,37 +197,6 @@ public class ACO_SingleThread {
         }
         return returnList;
     }
-
-    private Boolean IsMovable(String CurPos, String nextPos,double tank,double time)
-    {
-        double dis = datasetLoader.getDistance(CurPos, nextPos); 
-
-        time += (dis / Constants.velocity) + Constants.CustomerTime + Constants.StationTime;
-        tank -= (dis * Constants.consumption);
-        return (time <= Constants.tour_length && tank >= 0);
-    }
-    private Boolean CheckNextCustomer(String CurPos,List<String>Customers, double tank,double time)
-    {
-        for (String customerID : Customers) {
-            if(IsMovable(CurPos, customerID, tank, time))
-                return true;
-        }
-        return false;
-    }
-
-    private Boolean CheckNextStation(String CurPos,List<String>Stations ,double tank,double time)
-    {
-        for (String stationID : Stations) {
-            if(IsMovable(CurPos, stationID, tank, time))
-                return true;
-        }
-        return false;
-    }
-
-    public int generateRandomNumber(int min, int max) {
-        return random.nextInt(max - min + 1) + min;
-    }
-
 
 //---------------------------------------------------------------------------------------
 //endregion
