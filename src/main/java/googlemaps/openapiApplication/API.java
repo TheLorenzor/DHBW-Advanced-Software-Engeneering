@@ -27,7 +27,6 @@ public class API {
         // add the final parts
         requests.deleteCharAt(requests.length()-1);
         requests.append("&units=metric").append("&key=").append(API_key);
-        System.out.println(requests);
         if (requests.length()>0) {
             return null;
         }

@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 public class TestSmallDatasetLoader {
     private DatasetLoader tester;
     @BeforeEach
@@ -40,4 +42,5 @@ public class TestSmallDatasetLoader {
 
         Assertions.assertEquals(radius,tester.getDistance("D","F1"));
     }
+
 }
